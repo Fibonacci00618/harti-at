@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>harti.at — Engineering Digital Systems</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 2 43 13v22L24 46 5 35V13z' fill='none' stroke='%2300ffcc' stroke-width='3'/%3E%3Cpath d='M16 14v20M32 14v20M16 24h16' stroke='%2300ffcc' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+<meta name="description" content="harti.at — Michael Hartmann. IT System Engineer, homelab architect and creative tinkerer. Infrastructure, automation, AI and digital experiences.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   1. TOKENS & RESET
+   ============================================================ */
+:root{
+  --bg:        #0a0a0f;
+  --bg-soft:   #101018;
+  --surface:   rgba(255,255,255,0.035);
+  --line:      rgba(255,255,255,0.08);
+  --text:      #ffffff;
+  --muted:     #8a8a9a;
+  --accent:    #00ffcc;
+  --accent-2:  #6366f1;
+  --accent-glow: rgba(0,255,204,0.35);
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body:    'Inter', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --ease-out:  cubic-bezier(0.22, 1, 0.36, 1);
+  --nav-h: 72px;
+}
+*,*::before,*::after{ margin:0; padding:0; box-sizing:border-box; }
+html{ scroll-behavior:auto; }
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img,svg,canvas{ display:block; max-width:100%; }
+a{ color:inherit; text-decoration:none; }
+button,input,textarea{ font:inherit; color:inherit; }
+::selection{ background:var(--accent); color:#06060a; }
+
+/* Hide native cursor only on fine pointers when custom cursor is active */
+@media (hover:hover) and (pointer:fine){
+  body.cursor-active, body.cursor-active a, body.cursor-active button{ cursor:none; }
+}
+
+/* ============================================================
+   2. SMOOTH SCROLL LAYOUT
+   ============================================================ */
+body.has-smooth #smooth-wrapper{
+  position:fixed; inset:0; overflow:hidden;
+}
+#smooth-content{ will-change:transform; }
+
+/* ============================================================
+   3. PRELOADER
+   ============================================================ */
+#preloader{
+  position:fixed; inset:0; z-index:1000;
+  background:#06060a;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:28px;
+}
+.preloader-logo{
+  font-family:var(--font-display);
+  font-weight:700; font-size:clamp(1.4rem,3vw,2rem);
+  letter-spacing:0.35em; text-indent:0.35em;
+  opacity:0;
+}
+.preloader-logo em{ font-style:normal; color:var(--accent); }
+.preloader-bar{
+  width:min(240px,60vw); height:1px;
+  background:rgba(255,255,255,0.12);
+  position:relative; overflow:hidden;
+}
+.preloader-bar span{
+  position:absolute; inset:0;
+  background:linear-gradient(90deg,var(--accent-2),var(--accent));
+  transform-origin:left center;
+  transform:scaleX(0);
+}
+.preloader-pct{
+  font-size:0.7rem; letter-spacing:0.25em; color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+
+/* ============================================================
+   4. CUSTOM CURSOR
+   ============================================================ */
+.cursor-dot,.cursor-ring{
+  position:fixed; top:0; left:0; z-index:999;
+  pointer-events:none;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  display:none;
+}
+@media (hover:hover) and (pointer:fine){
+  body.cursor-active .cursor-dot,
+  body.cursor-active .cursor-ring{ display:block; }
+}
+.cursor-dot{
+  width:6px; height:6px; background:var(--accent);
+  mix-blend-mode:difference;
+}
+.cursor-ring{
+  width:36px; height:36px;
+  border:1px solid rgba(255,255,255,0.45);
+  transition:width .35s var(--ease-out), height .35s var(--ease-out),
+             border-color .35s var(--ease-out), background-color .35s var(--ease-out);
+}
+.cursor-ring.is-hover{
+  width:64px; height:64px;
+  border-color:var(--accent);
+  background:rgba(0,255,204,0.06);
+}
+
+/* ============================================================
+   5. NAVIGATION
+   ============================================================ */
+#nav{
+  position:fixed; top:0; left:0; right:0; z-index:900;
+  height:var(--nav-h);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 clamp(20px,4vw,56px);
+  background:rgba(10,10,15,0.55);
+  -webkit-backdrop-filter:blur(16px);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);
+  transform:translateY(-100%);
+}
+.nav-logo{
+  font-family:var(--font-display); font-weight:700;
+  letter-spacing:0.3em; font-size:0.95rem;
+}
+.nav-logo em{ font-style:normal; color:var(--accent); }
+.nav-links{
+  position:relative;
+  display:flex; gap:6px; list-style:none;
+}
+.nav-links a{
+  position:relative; z-index:1;
+  display:block; padding:8px 16px;
+  font-size:0.8rem; letter-spacing:0.08em;
+  color:var(--muted);
+  transition:color .3s ease;
+}
+.nav-links a.active, .nav-links a:hover{ color:var(--text); }
+.nav-indicator{ list-style:none;
+  position:absolute; bottom:2px; left:0;
+  height:1px; width:0;
+  background:var(--accent);
+  box-shadow:0 0 12px var(--accent-glow);
+}
+@media (max-width:768px){
+  .nav-links{ display:none; }
+}
+
+/* ============================================================
+   6. THREE.JS CANVAS (hero background)
+   ============================================================ */
+#webgl{
+  position:fixed; inset:0; z-index:0;
+  pointer-events:none;
+}
+
+/* ============================================================
+   7. GENERIC SECTION LAYOUT
+   ============================================================ */
+.section{
+  position:relative; z-index:2;
+  padding:clamp(90px,12vw,160px) clamp(20px,6vw,80px);
+  background:var(--bg);
+}
+.section-inner{ max-width:1200px; margin:0 auto; }
+.eyebrow{
+  display:inline-flex; align-items:center; gap:10px;
+  font-family:var(--font-mono);
+  font-size:0.72rem; letter-spacing:0.3em; text-transform:uppercase;
+  color:var(--accent); margin-bottom:24px;
+}
+.eyebrow::before{
+  content:""; width:28px; height:1px; background:var(--accent);
+}
+.h2{
+  font-family:var(--font-display); font-weight:600;
+  font-size:clamp(1.9rem,4.5vw,3.4rem);
+  line-height:1.12; letter-spacing:-0.02em;
+  max-width:18ch;
+}
+.lead{ color:var(--muted); max-width:52ch; }
+
+/* split-text helpers */
+.split .word{ display:inline-block; overflow:hidden; vertical-align:top; }
+.split .word-inner{ display:inline-block; will-change:transform; }
+.split-chars .char{ display:inline-block; overflow:hidden; vertical-align:top; }
+.split-chars .char-inner{ display:inline-block; will-change:transform; }
+
+/* ============================================================
+   8. HERO
+   ============================================================ */
+#hero{
+  position:relative; z-index:2;
+  min-height:100vh; min-height:100svh;
+  display:flex; flex-direction:column;
+  justify-content:center;
+  padding:calc(var(--nav-h) + 40px) clamp(20px,6vw,80px) 80px;
+  background:transparent;
+}
+.hero-inner{ max-width:1200px; margin:0 auto; width:100%; }
+.hero-eyebrow{ margin-bottom:28px; }
+.hero-title{
+  font-family:var(--font-display); font-weight:600;
+  font-size:clamp(2.6rem,8vw,6.2rem);
+  line-height:1.04; letter-spacing:-0.03em;
+  max-width:14ch;
+}
+.hero-title .line{ display:block; }
+.hero-title em{
+  font-style:normal;
+  background:linear-gradient(100deg,var(--accent) 0%,var(--accent-2) 100%);
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+}
+.hero-sub{
+  margin-top:30px; color:var(--muted);
+  max-width:46ch; font-size:clamp(0.95rem,1.4vw,1.1rem);
+}
+.hero-cta-row{ margin-top:44px; display:flex; gap:18px; flex-wrap:wrap; }
+.btn{
+  position:relative; display:inline-flex; align-items:center; gap:10px;
+  padding:14px 28px;
+  font-family:var(--font-display); font-size:0.85rem;
+  letter-spacing:0.12em; text-transform:uppercase;
+  border:1px solid var(--accent);
+  border-radius:2px;
+  background:transparent; color:var(--text);
+  overflow:hidden; cursor:pointer;
+  transition:color .35s var(--ease-out), box-shadow .35s var(--ease-out);
+  will-change:transform;
+}
+.btn::before{
+  content:""; position:absolute; inset:0;
+  background:var(--accent);
+  transform:scaleX(0); transform-origin:left center;
+  transition:transform .45s var(--ease-out);
+  z-index:-1;
+}
+.btn:hover{ color:#06060a; box-shadow:0 0 28px var(--accent-glow); }
+.btn:hover::before{ transform:scaleX(1); }
+.btn.ghost{ border-color:var(--line); color:var(--muted); }
+.btn.ghost::before{ background:rgba(255,255,255,0.95); }
+.btn.ghost:hover{ color:#06060a; box-shadow:none; }
+.hero-scroll{
+  position:absolute; bottom:34px; left:50%;
+  transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  font-size:0.65rem; letter-spacing:0.3em; text-transform:uppercase;
+  color:var(--muted);
+}
+.hero-scroll::after{
+  content:""; width:1px; height:42px;
+  background:linear-gradient(to bottom,var(--accent),transparent);
+  animation:scrollPulse 2.2s var(--ease-out) infinite;
+}
+@keyframes scrollPulse{
+  0%{ transform:scaleY(0); transform-origin:top; }
+  45%{ transform:scaleY(1); transform-origin:top; }
+  55%{ transform:scaleY(1); transform-origin:bottom; }
+  100%{ transform:scaleY(0); transform-origin:bottom; }
+}
+
+/* ============================================================
+   9. ABOUT
+   ============================================================ */
+#about{ border-top:1px solid var(--line); }
+.about-grid{
+  display:grid; grid-template-columns:1.15fr 0.85fr;
+  gap:clamp(40px,6vw,90px); align-items:start;
+}
+.about-copy p + p{ margin-top:18px; }
+.about-copy{ color:var(--muted); }
+.about-list{
+  margin-top:34px; list-style:none;
+  border-top:1px solid var(--line);
+}
+.about-list li{
+  display:flex; justify-content:space-between; gap:20px;
+  padding:14px 0; border-bottom:1px solid var(--line);
+  font-size:0.85rem; letter-spacing:0.04em;
+}
+.about-list li span:last-child{ color:var(--muted); }
+@media (max-width:860px){
+  .about-grid{ grid-template-columns:1fr; }
+}
+
+/* ============================================================
+   10. SERVICES
+   ============================================================ */
+#services{ background:var(--bg-soft); }
+.services-grid{
+  margin-top:56px;
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:22px;
+  perspective:1200px;
+}
+.card{
+  position:relative;
+  padding:36px 30px 40px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--surface);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+  transform-style:preserve-3d;
+  will-change:transform;
+  transition:border-color .4s ease;
+}
+.card::before,.card::after{
+  content:""; position:absolute; width:14px; height:14px;
+  pointer-events:none; opacity:0.4;
+  transition:width .4s var(--ease-out), height .4s var(--ease-out), opacity .4s ease;
+}
+.card::before{ top:10px; left:10px; border-top:1px solid var(--accent); border-left:1px solid var(--accent); }
+.card::after{ bottom:10px; right:10px; border-bottom:1px solid var(--accent); border-right:1px solid var(--accent); }
+.card:hover{
+  border-color:rgba(0,255,204,0.35);
+  box-shadow:0 0 44px rgba(0,255,204,0.07), inset 0 0 32px rgba(0,255,204,0.03);
+}
+.card:hover::before,.card:hover::after{ width:24px; height:24px; opacity:1; }
+.card-icon{
+  width:44px; height:44px; margin-bottom:26px;
+  display:grid; place-items:center;
+  border:1px solid rgba(0,255,204,0.4);
+  border-radius:8px; color:var(--accent);
+  transform:translateZ(30px);
+}
+.card h3{
+  font-family:var(--font-display); font-weight:600;
+  font-size:1.25rem; margin-bottom:12px;
+  transform:translateZ(24px);
+}
+.card p{
+  color:var(--muted); font-size:0.92rem;
+  transform:translateZ(16px);
+}
+.card .card-tag{
+  display:inline-block; margin-top:22px;
+  font-size:0.68rem; letter-spacing:0.22em; text-transform:uppercase;
+  color:var(--accent);
+}
+@media (max-width:980px){
+  .services-grid{ grid-template-columns:1fr; max-width:560px; }
+}
+
+/* ============================================================
+   11. STATS
+   ============================================================ */
+#stats{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.stats-grid{
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:30px; text-align:left;
+}
+.stat-value{
+  font-family:var(--font-display); font-weight:700;
+  font-size:clamp(2.4rem,5vw,4rem); line-height:1;
+  letter-spacing:-0.02em;
+  font-variant-numeric:tabular-nums;
+}
+.stat-value .suffix{ color:var(--accent); }
+.stat-label{
+  margin-top:10px; color:var(--muted);
+  font-size:0.78rem; letter-spacing:0.18em; text-transform:uppercase;
+}
+@media (max-width:860px){
+  .stats-grid{ grid-template-columns:repeat(2,1fr); gap:44px 24px; }
+}
+
+/* ============================================================
+   12. WORK (masonry-style)
+   ============================================================ */
+.work-grid{
+  margin-top:56px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  grid-auto-rows:200px;
+  gap:22px;
+}
+.work-item{
+  position:relative; overflow:hidden;
+  border-radius:10px; border:1px solid var(--line);
+  grid-row:span 2;
+  will-change:transform;
+}
+.work-item.tall{ grid-row:span 3; }
+.work-visual{
+  position:absolute; inset:0;
+  transition:transform .8s var(--ease-out);
+}
+.work-item:hover .work-visual{ transform:scale(1.06); }
+.work-item:nth-child(1) .work-visual{ background:radial-gradient(120% 120% at 20% 10%, #16323a 0%, #0a0a0f 60%), linear-gradient(160deg, rgba(0,255,204,0.18), transparent 55%); }
+.work-item:nth-child(2) .work-visual{ background:radial-gradient(120% 120% at 80% 0%, #1d1d3a 0%, #0a0a0f 62%), linear-gradient(200deg, rgba(99,102,241,0.28), transparent 55%); }
+.work-item:nth-child(3) .work-visual{ background:radial-gradient(140% 100% at 0% 100%, #102a26 0%, #0a0a0f 65%), linear-gradient(20deg, rgba(0,255,204,0.14), transparent 50%); }
+.work-item:nth-child(4) .work-visual{ background:radial-gradient(120% 140% at 100% 80%, #232040 0%, #0a0a0f 60%), linear-gradient(320deg, rgba(99,102,241,0.22), transparent 55%); }
+.work-item:nth-child(5) .work-visual{ background:radial-gradient(150% 120% at 50% 0%, #14262e 0%, #0a0a0f 70%), linear-gradient(180deg, rgba(0,255,204,0.10), transparent 45%); }
+.work-item:nth-child(6) .work-visual{ background:radial-gradient(130% 130% at 10% 90%, #1a1a33 0%, #0a0a0f 62%), linear-gradient(140deg, rgba(99,102,241,0.20), rgba(0,255,204,0.08) 70%, transparent); }
+.work-visual::after{
+  content:""; position:absolute; inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,0.045) 1px,transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(80% 80% at 50% 50%,#000 30%,transparent 100%);
+  mask-image:radial-gradient(80% 80% at 50% 50%,#000 30%,transparent 100%);
+}
+.work-overlay{
+  position:absolute; inset:0; z-index:1;
+  display:flex; flex-direction:column; justify-content:flex-end;
+  padding:26px;
+  background:linear-gradient(to top,rgba(6,6,10,0.85) 0%,transparent 55%);
+  opacity:0; transform:translateY(12px);
+  transition:opacity .5s var(--ease-out), transform .5s var(--ease-out);
+}
+.work-item:hover .work-overlay{ opacity:1; transform:translateY(0); }
+.work-overlay h3{
+  font-family:var(--font-display); font-weight:600; font-size:1.3rem;
+}
+.work-overlay span{
+  margin-top:6px; font-size:0.72rem; letter-spacing:0.22em;
+  text-transform:uppercase; color:var(--accent);
+}
+@media (max-width:768px){
+  .work-grid{ grid-template-columns:1fr; grid-auto-rows:170px; }
+  .work-item, .work-item.tall{ grid-row:span 2; }
+  .work-overlay{ opacity:1; transform:none; }
+}
+
+/* ============================================================
+   13. CONTACT
+   ============================================================ */
+#contact{ background:var(--bg-soft); }
+.contact-grid{
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:clamp(40px,6vw,90px);
+}
+.contact-meta{ color:var(--muted); font-size:0.9rem; }
+.contact-meta a{ color:var(--text); border-bottom:1px solid var(--accent); }
+.contact-meta .block + .block{ margin-top:26px; }
+.contact-meta .label{
+  display:block; font-size:0.68rem; letter-spacing:0.25em;
+  text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.form-field{ position:relative; margin-bottom:28px; }
+.form-field input,
+.form-field textarea{
+  width:100%; background:transparent; border:none;
+  border-bottom:1px solid var(--line);
+  padding:14px 0 12px; outline:none;
+  transition:border-color .3s ease;
+  resize:vertical; min-height:0;
+}
+.form-field textarea{ min-height:110px; }
+.form-field label{
+  position:absolute; left:0; top:14px;
+  color:var(--muted); font-size:0.9rem;
+  pointer-events:none;
+  transition:transform .3s var(--ease-out), font-size .3s var(--ease-out), color .3s ease;
+  transform-origin:left top;
+}
+.form-field input:focus,
+.form-field textarea:focus{ border-color:var(--accent); }
+.form-field input:focus + label,
+.form-field input:not(:placeholder-shown) + label,
+.form-field textarea:focus + label,
+.form-field textarea:not(:placeholder-shown) + label{
+  transform:translateY(-22px); font-size:0.68rem;
+  color:var(--accent); letter-spacing:0.18em; text-transform:uppercase;
+}
+.form-success{
+  display:none; padding:18px 20px;
+  border:1px solid rgba(0,255,204,0.4); border-radius:6px;
+  background:rgba(0,255,204,0.06); font-size:0.9rem;
+}
+@media (max-width:860px){
+  .contact-grid{ grid-template-columns:1fr; }
+}
+
+/* ============================================================
+   14. FOOTER + WAVE
+   ============================================================ */
+#footer{
+  position:relative; z-index:2;
+  background:#06060a;
+  padding:0 clamp(20px,6vw,80px) 44px;
+}
+.wave-wrap{
+  position:relative; height:120px; overflow:hidden;
+  margin:0 calc(-1 * clamp(20px,6vw,80px));
+}
+.wave{
+  position:absolute; bottom:0; left:0;
+  width:200%; height:100%;
+  animation:waveDrift 16s linear infinite;
+  will-change:transform;
+}
+.wave svg{ width:100%; height:100%; }
+.wave.w2{
+  animation-duration:26s; animation-direction:reverse;
+  opacity:0.5;
+}
+@keyframes waveDrift{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-50%); }
+}
+.footer-inner{
+  max-width:1200px; margin:0 auto;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:24px; flex-wrap:wrap;
+  padding-top:34px; border-top:1px solid var(--line);
+}
+.footer-links{ display:flex; gap:26px; list-style:none; }
+.footer-links a{
+  font-size:0.78rem; letter-spacing:0.1em; color:var(--muted);
+  transition:color .3s ease;
+}
+.footer-links a:hover{ color:var(--accent); }
+.footer-copy{ font-size:0.72rem; color:var(--muted); letter-spacing:0.06em; }
+
+/* ============================================================
+   15. REVEAL DEFAULTS & REDUCED MOTION
+   ============================================================ */
+[data-reveal]{ opacity:0; }
+body.reduced [data-reveal],
+body.reduced .split .word-inner,
+body.reduced .split-chars .char-inner{
+  opacity:1 !important; transform:none !important;
+}
+@media (prefers-reduced-motion:reduce){
+  .hero-scroll::after, .wave{ animation:none; }
+}
+
+/* ============================================================
+   16. TECH LAYER (harti.at rebrand)
+   ============================================================ */
+/* film grain + scanlines */
+.fx-overlay{
+  position:fixed; inset:0; z-index:950; pointer-events:none;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 3px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity:0.16;
+}
+/* logo */
+.logo-mark{ width:24px; height:24px; flex:none; }
+.logo-mark.xl{ width:60px; height:60px; }
+.nav-logo{
+  display:inline-flex; align-items:center; gap:11px;
+  letter-spacing:0.06em; text-transform:none; font-size:1.02rem;
+}
+.nav-logo:hover .logo-mark{ filter:drop-shadow(0 0 7px var(--accent-glow)); }
+.nav-logo:hover .logo-word{ animation:glitchText .35s steps(2) 1; }
+@keyframes glitchText{
+  0%{ text-shadow:2px 0 var(--accent), -2px 0 var(--accent-2); }
+  50%{ text-shadow:-1.5px 0 var(--accent-2), 1.5px 0 var(--accent); }
+  100%{ text-shadow:none; }
+}
+/* preloader rebrand */
+#preloader .preloader-logo{
+  display:flex; flex-direction:column; align-items:center; gap:18px;
+  letter-spacing:normal; text-indent:0;
+}
+#preloader .logo-mark{
+  stroke-dasharray:1; stroke-dashoffset:1;
+  animation:logoDraw 1.25s var(--ease-out) .15s forwards;
+}
+@keyframes logoDraw{ to{ stroke-dashoffset:0; } }
+.preloader-word{
+  font-family:var(--font-display); font-weight:700;
+  font-size:clamp(1.3rem,3vw,1.8rem); letter-spacing:0.06em;
+}
+.preloader-word em{ font-style:normal; color:var(--accent); }
+.preloader-boot{
+  font-family:var(--font-mono); font-size:0.68rem;
+  letter-spacing:0.1em; color:var(--muted);
+  display:flex; flex-direction:column; gap:5px;
+  min-height:74px; width:min(240px,60vw);
+}
+.boot-line{ opacity:0; }
+.boot-line span{ color:var(--accent); }
+/* mono everywhere it reads "technical" */
+.stat-label,.card-tag,.nav-links a,.footer-links a,
+.contact-meta .label,.work-overlay span,.hero-scroll,.preloader-pct{
+  font-family:var(--font-mono);
+}
+/* hero status readout */
+.hero-status{
+  margin-top:40px; display:flex; flex-wrap:wrap; gap:10px 28px;
+  font-family:var(--font-mono); font-size:0.66rem;
+  letter-spacing:0.18em; text-transform:uppercase; color:var(--muted);
+}
+.hero-status span{ display:inline-flex; align-items:center; gap:8px; }
+.hero-status span::before{
+  content:""; width:5px; height:5px; border-radius:50%;
+  background:var(--accent); box-shadow:0 0 8px var(--accent-glow);
+  animation:statusPulse 2.4s ease-in-out infinite;
+}
+.hero-status span:nth-child(2)::before{ animation-delay:.5s; }
+.hero-status span:nth-child(3)::before{ animation-delay:1s; }
+.hero-status span:nth-child(4)::before{ animation-delay:1.5s; }
+@keyframes statusPulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.25; } }
+/* giant section index watermark */
+.section[data-index]::before{
+  content:attr(data-index);
+  position:absolute; top:54px; right:clamp(20px,6vw,80px);
+  font-family:var(--font-mono); font-size:clamp(3.4rem,9vw,7rem);
+  font-weight:500; line-height:1; pointer-events:none;
+  color:transparent;
+  -webkit-text-stroke:1px rgba(255,255,255,0.07);
+}
+/* marquee strip */
+.marquee{
+  position:relative; z-index:2; overflow:hidden;
+  background:var(--bg);
+  border-bottom:1px solid var(--line);
+  padding:17px 0;
+}
+.marquee-track{
+  display:flex; width:max-content;
+  animation:marqueeDrift 30s linear infinite;
+  will-change:transform;
+}
+.marquee-track span{
+  font-family:var(--font-mono); font-size:0.74rem;
+  letter-spacing:0.32em; text-transform:uppercase;
+  color:var(--muted); white-space:nowrap; padding-right:0.32em;
+}
+.marquee-track span em{ font-style:normal; color:var(--accent); }
+@keyframes marqueeDrift{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+body.reduced .marquee-track{ animation:none; }
+@media (prefers-reduced-motion:reduce){
+  .marquee-track, .hero-status span::before, #preloader .logo-mark{ animation:none; }
+  #preloader .logo-mark{ stroke-dashoffset:0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGO SYMBOL + FX OVERLAY ===================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00ffcc"/>
+      <stop offset="1" stop-color="#6366f1"/>
+    </linearGradient>
+    <symbol id="logo-h" viewBox="0 0 48 48">
+      <path pathLength="1" d="M24 2 43 13v22L24 46 5 35V13Z" fill="none" stroke="url(#logoGrad)" stroke-width="2"/>
+      <path pathLength="1" d="M16 14v20M32 14v20M16 24h16" fill="none" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+      <path pathLength="1" d="M5 13 2 11.2M43 35l3 1.8" fill="none" stroke="url(#logoGrad)" stroke-width="1.5"/>
+      <circle cx="32" cy="14" r="2.6" fill="#00ffcc"/>
+    </symbol>
+  </defs>
+</svg>
+<div class="fx-overlay" aria-hidden="true"></div>
+
+<!-- ===================== PRELOADER ===================== -->
+<div id="preloader" aria-hidden="true">
+  <div class="preloader-logo">
+    <svg class="logo-mark xl" viewBox="0 0 48 48"><use href="#logo-h"/></svg>
+    <div class="preloader-word">harti<em>.at</em></div>
+  </div>
+  <div class="preloader-boot">
+    <div class="boot-line">&gt; init harti.at <span>v3.0.1</span></div>
+    <div class="boot-line">&gt; mounting modules <span>[ok]</span></div>
+    <div class="boot-line">&gt; webgl renderer <span>[ok]</span></div>
+    <div class="boot-line">&gt; establishing uplink <span>[ok]</span></div>
+  </div>
+  <div class="preloader-bar"><span></span></div>
+  <div class="preloader-pct">00</div>
+</div>
+
+<!-- ===================== CUSTOM CURSOR ===================== -->
+<div class="cursor-dot" aria-hidden="true"></div>
+<div class="cursor-ring" aria-hidden="true"></div>
+
+<!-- ===================== NAVIGATION ===================== -->
+<nav id="nav">
+  <a href="#hero" class="nav-logo" data-hover><svg class="logo-mark" viewBox="0 0 48 48"><use href="#logo-h"/></svg><span class="logo-word">harti<em>.at</em></span></a>
+  <ul class="nav-links">
+    <li><a href="#hero" class="active" data-hover>Home</a></li>
+    <li><a href="#about" data-hover>About</a></li>
+    <li><a href="#services" data-hover>Services</a></li>
+    <li><a href="#work" data-hover>Work</a></li>
+    <li><a href="#contact" data-hover>Contact</a></li>
+    <li class="nav-indicator" aria-hidden="true"></li>
+  </ul>
+</nav>
+
+<!-- ===================== THREE.JS BACKGROUND ===================== -->
+<canvas id="webgl" aria-hidden="true"></canvas>
+
+<!-- ===================== SMOOTH SCROLL WRAPPER ===================== -->
+<div id="smooth-wrapper">
+<div id="smooth-content">
+
+  <!-- ===================== HERO ===================== -->
+  <header class="" id="hero">
+    <div class="hero-inner">
+      <div class="eyebrow hero-eyebrow" data-reveal>Michael Hartmann — IT System Engineer</div>
+      <h1 class="hero-title" id="heroTitle">
+        <span class="line">Engineering</span>
+        <span class="line">digital systems</span>
+        <span class="line">with <em>precision.</em></span>
+      </h1>
+      <p class="hero-sub" data-reveal>
+        Infrastructure by day, creative engineering by night. I design, automate
+        and occasionally over-engineer — from enterprise client fleets to smart
+        homes, self-hosted clouds and local AI.
+      </p>
+      <div class="hero-cta-row" data-reveal>
+        <a href="#work" class="btn" data-hover data-magnetic>View projects</a>
+        <a href="#contact" class="btn ghost" data-hover data-magnetic>Get in touch</a>
+      </div>
+      <div class="hero-status" data-reveal>
+        <span>SYS://ONLINE</span>
+        <span>47.16°N · 9.80°E</span>
+        <span>UPTIME 99.98%</span>
+        <span>V3.0.1</span>
+      </div>
+    </div>
+    <div class="hero-scroll" data-reveal>Scroll</div>
+  </header>
+
+  <!-- ===================== ABOUT ===================== -->
+  <section class="section" id="about" data-index="01">
+    <div class="section-inner">
+      <div class="eyebrow" data-reveal>01 · Profile</div>
+      <div class="about-grid">
+        <h2 class="h2 split" data-split>
+          I engineer infrastructure by day and digital experiences by night.
+        </h2>
+        <div class="about-copy">
+          <p data-reveal>
+            I'm Michael Hartmann, an IT System Engineer from Vorarlberg, Austria.
+            Professionally I keep enterprise client infrastructure running at scale;
+            privately I run a homelab that occasionally rivals it — Proxmox cluster,
+            self-hosted cloud, full smart home stack and a growing local AI lab.
+          </p>
+          <p data-reveal>
+            This site is my lab notebook in public: projects, experiments and the
+            occasional rabbit hole. If it can be automated, optimized or
+            self-hosted, it probably already has been.
+          </p>
+          <ul class="about-list">
+            <li data-reveal><span>Based in</span><span>Nüziders, Austria</span></li>
+            <li data-reveal><span>Day job</span><span>IT System Engineer</span></li>
+            <li data-reveal><span>Focus</span><span>Infra · Automation · AI</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SERVICES ===================== -->
+  <section class="section" id="services" data-index="02">
+    <div class="section-inner">
+      <div class="eyebrow" data-reveal>02 · Focus areas</div>
+      <h2 class="h2 split" data-split>Three domains, one standard.</h2>
+      <div class="services-grid">
+        <article class="card" data-tilt data-reveal data-hover>
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          </div>
+          <h3>Infrastructure &amp; Homelab</h3>
+          <p>Virtualization, networking and storage done properly. Proxmox,
+             Ubiquiti, self-hosted services — built for uptime, monitored
+             like production, because it is.</p>
+          <span class="card-tag">Proxmox / Ubiquiti / Docker</span>
+        </article>
+        <article class="card" data-tilt data-reveal data-hover>
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>
+          </div>
+          <h3>Automation &amp; Smart Home</h3>
+          <p>If a task happens twice, it gets a workflow. Home Assistant,
+             n8n pipelines, energy optimization with PV and battery storage —
+             the house runs itself, on schedule.</p>
+          <span class="card-tag">Home Assistant / n8n / MQTT</span>
+        </article>
+        <article class="card" data-tilt data-reveal data-hover>
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18M3 12h18"/></svg>
+          </div>
+          <h3>AI &amp; Creative Tech</h3>
+          <p>Local LLMs on bare metal, generative music pipelines, 3D printing
+             and WebGL experiments. The playground where infrastructure meets
+             creativity.</p>
+          <span class="card-tag">Ollama / Suno / WebGL</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== STATS ===================== -->
+  <section class="section" id="stats">
+    <div class="section-inner">
+      <div class="stats-grid">
+        <div class="stat" data-reveal>
+          <div class="stat-value"><span data-count="1500">0</span><span class="suffix">+</span></div>
+          <div class="stat-label">Clients managed</div>
+        </div>
+        <div class="stat" data-reveal>
+          <div class="stat-value"><span data-count="42">0</span><span class="suffix">TB</span></div>
+          <div class="stat-label">Raw storage</div>
+        </div>
+        <div class="stat" data-reveal>
+          <div class="stat-value"><span data-count="30">0</span><span class="suffix">+</span></div>
+          <div class="stat-label">Self-hosted services</div>
+        </div>
+        <div class="stat" data-reveal>
+          <div class="stat-value"><span data-count="99">0</span><span class="suffix">%</span></div>
+          <div class="stat-label">Homelab uptime</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== MARQUEE ===================== -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Infrastructure <em>//</em> Automation <em>//</em> Local AI <em>//</em> Smart Home <em>//</em> 3D Printing <em>//</em> Self-Hosting <em>//</em> WebGL <em>//</em> Music Tech <em>//</em></span>
+      <span>Infrastructure <em>//</em> Automation <em>//</em> Local AI <em>//</em> Smart Home <em>//</em> 3D Printing <em>//</em> Self-Hosting <em>//</em> WebGL <em>//</em> Music Tech <em>//</em></span>
+    </div>
+  </div>
+
+  <!-- ===================== WORK ===================== -->
+  <section class="section" id="work" data-index="03">
+    <div class="section-inner">
+      <div class="eyebrow" data-reveal>03 · Projects</div>
+      <h2 class="h2 split" data-split>Selected projects from the lab.</h2>
+      <div class="work-grid">
+        <a href="#contact" class="work-item tall" data-reveal data-hover>
+          <div class="work-visual"></div>
+          <div class="work-overlay"><h3>fotos.harti.at</h3><span>PRJ-01 · Self-hosted Photo Cloud</span></div>
+        </a>
+        <a href="#contact" class="work-item" data-reveal data-hover>
+          <div class="work-visual"></div>
+          <div class="work-overlay"><h3>Elektroplan</h3><span>PRJ-02 · Interactive SVG Editor</span></div>
+        </a>
+        <a href="#contact" class="work-item" data-reveal data-hover>
+          <div class="work-visual"></div>
+          <div class="work-overlay"><h3>n8n Ops</h3><span>PRJ-03 · Automation &amp; Alerting</span></div>
+        </a>
+        <a href="#contact" class="work-item tall" data-reveal data-hover>
+          <div class="work-visual"></div>
+          <div class="work-overlay"><h3>Z8 AI Lab</h3><span>PRJ-04 · Local LLM Stack</span></div>
+        </a>
+        <a href="#contact" class="work-item" data-reveal data-hover>
+          <div class="work-visual"></div>
+          <div class="work-overlay"><h3>Fibonacci618</h3><span>PRJ-05 · Music Production</span></div>
+        </a>
+        <a href="#contact" class="work-item" data-reveal data-hover>
+          <div class="work-visual"></div>
+          <div class="work-overlay"><h3>Print Lab</h3><span>PRJ-06 · 3D Printing Projects</span></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CONTACT ===================== -->
+  <section class="section" id="contact" data-index="04">
+    <div class="section-inner">
+      <div class="eyebrow" data-reveal>04 · Contact</div>
+      <h2 class="h2 split" data-split>Let's build something memorable.</h2>
+      <div class="contact-grid" style="margin-top:48px;">
+        <div class="contact-meta">
+          <div class="block" data-reveal>
+            <span class="label">Say hello</span>
+            <a href="mailto:hello@harti.at" data-hover>hello@harti.at</a>
+          </div>
+          <div class="block" data-reveal>
+            <span class="label">Location</span>
+            Nüziders · Vorarlberg · Austria
+          </div>
+          <div class="block" data-reveal>
+            <span class="label">Availability</span>
+            Open for collaborations &amp; side projects
+          </div>
+        </div>
+        <form id="contactForm" novalidate>
+          <div class="form-field" data-reveal>
+            <input type="text" id="cf-name" placeholder=" " autocomplete="name" required>
+            <label for="cf-name">Your name</label>
+          </div>
+          <div class="form-field" data-reveal>
+            <input type="email" id="cf-email" placeholder=" " autocomplete="email" required>
+            <label for="cf-email">Email address</label>
+          </div>
+          <div class="form-field" data-reveal>
+            <textarea id="cf-msg" placeholder=" " rows="4" required></textarea>
+            <label for="cf-msg">Tell us about your project</label>
+          </div>
+          <button type="submit" class="btn" data-hover data-magnetic data-reveal>Send message</button>
+          <p class="form-success" id="formSuccess">
+            Thanks — your message is on its way. We'll reply within two working days.
+          </p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer id="footer">
+    <div class="wave-wrap" aria-hidden="true">
+      <div class="wave w1">
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#6366f1" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#00ffcc" stop-opacity="0.3"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#waveGrad)" d="M0,64 C120,96 240,32 360,48 C480,64 600,112 720,96 C840,80 960,16 1080,32 C1200,48 1320,96 1440,72 L1440,120 L0,120 Z"/>
+        </svg>
+      </div>
+      <div class="wave w2">
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+          <path fill="rgba(99,102,241,0.18)" d="M0,80 C140,48 280,104 420,88 C560,72 700,24 840,40 C980,56 1120,104 1260,88 C1330,80 1400,64 1440,56 L1440,120 L0,120 Z"/>
+        </svg>
+      </div>
+    </div>
+    <div class="footer-inner">
+      <a href="#hero" class="nav-logo" data-hover><svg class="logo-mark" viewBox="0 0 48 48"><use href="#logo-h"/></svg><span class="logo-word">harti<em>.at</em></span></a>
+      <ul class="footer-links">
+        <li><a href="#about" data-hover>About</a></li>
+        <li><a href="#work" data-hover>Work</a></li>
+        <li><a href="mailto:hello@harti.at" data-hover>Email</a></li>
+      </ul>
+      <div class="footer-copy">© 2026 harti.at — Michael Hartmann · Engineered with precision.</div>
+    </div>
+  </footer>
+
+</div><!-- /#smooth-content -->
+</div><!-- /#smooth-wrapper -->
+
+<!-- ===================== LIBRARIES ===================== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<script>
+/* ============================================================
+   harti.at — main script
+   ============================================================ */
+(function(){
+  "use strict";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isFinePointer  = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const useSmooth      = isFinePointer && !prefersReduced;
+
+  if (prefersReduced) document.body.classList.add('reduced');
+
+  /* ----------------------------------------------------------
+     1. TEXT SPLITTING (manual, no SplitText plugin)
+     ---------------------------------------------------------- */
+  function splitWords(el){
+    const text = el.textContent.trim().replace(/\s+/g, ' ');
+    el.textContent = '';
+    text.split(' ').forEach(function(word, i){
+      const outer = document.createElement('span');
+      outer.className = 'word';
+      const inner = document.createElement('span');
+      inner.className = 'word-inner';
+      inner.textContent = word;
+      outer.appendChild(inner);
+      el.appendChild(outer);
+      el.appendChild(document.createTextNode(' '));
+    });
+    return el.querySelectorAll('.word-inner');
+  }
+
+  function splitChars(el){
+    // split each .line into chars, preserve <em> styling by walking nodes
+    const lines = el.querySelectorAll('.line');
+    const all = [];
+    lines.forEach(function(line){
+      const frag = document.createDocumentFragment();
+      Array.from(line.childNodes).forEach(function(node){
+        const isEm = node.nodeName === 'EM';
+        const txt = node.textContent;
+        const host = isEm ? document.createElement('em') : frag;
+        txt.split('').forEach(function(ch){
+          if (ch === ' '){
+            (isEm ? host : frag).appendChild(document.createTextNode(' '));
+            return;
+          }
+          const outer = document.createElement('span');
+          outer.className = 'char';
+          const inner = document.createElement('span');
+          inner.className = 'char-inner';
+          inner.textContent = ch;
+          outer.appendChild(inner);
+          (isEm ? host : frag).appendChild(outer);
+          all.push(inner);
+        });
+        if (isEm) frag.appendChild(host);
+      });
+      line.innerHTML = '';
+      line.appendChild(frag);
+    });
+    el.classList.add('split-chars');
+    return all;
+  }
+
+  document.querySelectorAll('[data-split]').forEach(splitWords);
+  const heroChars = splitChars(document.getElementById('heroTitle'));
+
+  /* ----------------------------------------------------------
+     2. THREE.JS PARTICLE FIELD (hero background)
+     ---------------------------------------------------------- */
+  const canvas = document.getElementById('webgl');
+  let renderer, scene, camera, points, wire;
+  let mouseX = 0, mouseY = 0, camX = 0, camY = 0;
+  let webglOK = true;
+
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: false, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    scene  = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 7;
+
+    const COUNT = window.innerWidth < 768 ? 900 : 2200;
+    const pos = new Float32Array(COUNT * 3);
+    const col = new Float32Array(COUNT * 3);
+    const cA = new THREE.Color('#00ffcc');
+    const cB = new THREE.Color('#6366f1');
+    const tmp = new THREE.Color();
+
+    for (let i = 0; i < COUNT; i++){
+      // distribute in a flat-ish disc with depth for parallax
+      const r = 4 + Math.random() * 9;
+      const a = Math.random() * Math.PI * 2;
+      pos[i*3]   = Math.cos(a) * r * (0.6 + Math.random() * 0.6);
+      pos[i*3+1] = (Math.random() - 0.5) * 9;
+      pos[i*3+2] = (Math.random() - 0.5) * 12;
+      tmp.copy(cA).lerp(cB, Math.random());
+      const dim = 0.35 + Math.random() * 0.65;
+      col[i*3] = tmp.r * dim; col[i*3+1] = tmp.g * dim; col[i*3+2] = tmp.b * dim;
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+
+    const mat = new THREE.PointsMaterial({
+      size: 0.035, vertexColors: true, transparent: true,
+      opacity: 0.85, depthWrite: false,
+      blending: THREE.AdditiveBlending, sizeAttenuation: true
+    });
+
+    points = new THREE.Points(geo, mat);
+    scene.add(points);
+
+    // wireframe icosahedron — slow-rotating technical centerpiece
+    wire = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(2.3, 1),
+      new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true, transparent: true, opacity: 0.09 })
+    );
+    wire.position.set(window.innerWidth < 768 ? 0 : 2.7, 0.2, 1.4);
+    scene.add(wire);
+
+    window.addEventListener('mousemove', function(e){
+      mouseX = (e.clientX / window.innerWidth)  * 2 - 1;
+      mouseY = (e.clientY / window.innerHeight) * 2 - 1;
+    }, { passive: true });
+
+    window.addEventListener('resize', function(){
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+  } catch (e) {
+    webglOK = false;
+    canvas.style.display = 'none';
+  }
+
+  function renderWebGL(t){
+    if (!webglOK) return;
+    if (!prefersReduced){
+      points.rotation.y = t * 0.00004;
+      points.rotation.x = Math.sin(t * 0.00002) * 0.08;
+      if (wire){
+        wire.rotation.y = t * 0.00012;
+        wire.rotation.x = t * 0.00007;
+      }
+      camX += (mouseX * 0.7 - camX) * 0.04;   // mouse parallax (lerped)
+      camY += (-mouseY * 0.45 - camY) * 0.04;
+      camera.position.x = camX;
+      camera.position.y = camY;
+      camera.lookAt(0, 0, 0);
+    }
+    renderer.render(scene, camera);
+  }
+
+  // Fade particles out once the hero leaves the viewport
+  if (webglOK){
+    gsap.to(canvas, {
+      opacity: 0, ease: 'none',
+      scrollTrigger: { trigger: '#about', start: 'top bottom', end: 'top 30%', scrub: true }
+    });
+  }
+
+  /* ----------------------------------------------------------
+     3. SMOOTH SCROLL (lerp) + ScrollTrigger proxy
+     ---------------------------------------------------------- */
+  const content = document.getElementById('smooth-content');
+  let current = 0, target = 0;
+  const EASE = 0.085;
+
+  function setBodyHeight(){
+    document.body.style.height = content.getBoundingClientRect().height + 'px';
+  }
+
+  if (useSmooth){
+    document.body.classList.add('has-smooth');
+    setBodyHeight();
+    new ResizeObserver(setBodyHeight).observe(content);
+
+    window.addEventListener('scroll', function(){ target = window.scrollY; }, { passive: true });
+
+    ScrollTrigger.scrollerProxy(document.body, {
+      scrollTop: function(value){
+        if (arguments.length){ current = target = value; window.scrollTo(0, value); }
+        return current;
+      },
+      getBoundingClientRect: function(){
+        return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight };
+      },
+      pinType: 'transform'
+    });
+    ScrollTrigger.defaults({ scroller: document.body });
+    window.addEventListener('resize', function(){ ScrollTrigger.refresh(); });
+  }
+
+  /* ----------------------------------------------------------
+     4. MASTER RAF LOOP (scroll lerp + cursor + webgl)
+     ---------------------------------------------------------- */
+  // Custom cursor state
+  const dot  = document.querySelector('.cursor-dot');
+  const ring = document.querySelector('.cursor-ring');
+  let cx = innerWidth / 2, cy = innerHeight / 2;   // mouse
+  let rx = cx, ry = cy;                            // lagging ring
+
+  if (isFinePointer && !prefersReduced){
+    document.body.classList.add('cursor-active');
+    window.addEventListener('mousemove', function(e){ cx = e.clientX; cy = e.clientY; }, { passive: true });
+    document.querySelectorAll('[data-hover]').forEach(function(el){
+      el.addEventListener('mouseenter', function(){ ring.classList.add('is-hover'); });
+      el.addEventListener('mouseleave', function(){ ring.classList.remove('is-hover'); });
+    });
+  }
+
+  function raf(t){
+    // smooth scroll
+    if (useSmooth){
+      current += (target - current) * EASE;
+      if (Math.abs(target - current) < 0.05) current = target;
+      content.style.transform = 'translate3d(0,' + (-current) + 'px,0)';
+      ScrollTrigger.update();
+    }
+    // cursor
+    if (document.body.classList.contains('cursor-active')){
+      dot.style.transform  = 'translate(' + (cx - 3)  + 'px,' + (cy - 3)  + 'px)';
+      rx += (cx - rx) * 0.16;
+      ry += (cy - ry) * 0.16;
+      ring.style.left = rx + 'px';
+      ring.style.top  = ry + 'px';
+    }
+    renderWebGL(t);
+    requestAnimationFrame(raf);
+  }
+  requestAnimationFrame(raf);
+
+  /* ----------------------------------------------------------
+     5. MAGNETIC BUTTONS
+     ---------------------------------------------------------- */
+  if (isFinePointer && !prefersReduced){
+    document.querySelectorAll('[data-magnetic]').forEach(function(btn){
+      btn.addEventListener('mousemove', function(e){
+        const r = btn.getBoundingClientRect();
+        const x = e.clientX - r.left - r.width / 2;
+        const y = e.clientY - r.top  - r.height / 2;
+        gsap.to(btn, { x: x * 0.25, y: y * 0.35, duration: 0.4, ease: 'power3.out' });
+      });
+      btn.addEventListener('mouseleave', function(){
+        gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.45)' });
+      });
+    });
+  }
+
+  /* ----------------------------------------------------------
+     6. 3D CARD TILT
+     ---------------------------------------------------------- */
+  if (isFinePointer && !prefersReduced){
+    document.querySelectorAll('[data-tilt]').forEach(function(card){
+      card.addEventListener('mousemove', function(e){
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width  - 0.5;
+        const py = (e.clientY - r.top)  / r.height - 0.5;
+        gsap.to(card, {
+          rotationY: px * 10, rotationX: -py * 10,
+          transformPerspective: 900, duration: 0.5, ease: 'power2.out'
+        });
+      });
+      card.addEventListener('mouseleave', function(){
+        gsap.to(card, { rotationY: 0, rotationX: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)' });
+      });
+    });
+  }
+
+  /* ----------------------------------------------------------
+     7. NAVIGATION — sliding active indicator + section spy
+     ---------------------------------------------------------- */
+  const navLinks  = Array.from(document.querySelectorAll('.nav-links a'));
+  const indicator = document.querySelector('.nav-indicator');
+
+  function moveIndicator(link, instant){
+    if (!link || !indicator) return;
+    const w = link.offsetWidth, x = link.offsetLeft;
+    gsap.to(indicator, { width: w, x: x, duration: instant ? 0 : 0.45, ease: 'power3.out' });
+  }
+  function setActive(id){
+    navLinks.forEach(function(a){
+      const on = a.getAttribute('href') === '#' + id;
+      a.classList.toggle('active', on);
+      if (on) moveIndicator(a, false);
+    });
+  }
+  window.addEventListener('resize', function(){
+    moveIndicator(document.querySelector('.nav-links a.active'), true);
+  });
+
+  ['hero','about','services','work','contact'].forEach(function(id){
+    ScrollTrigger.create({
+      trigger: '#' + id,
+      start: 'top 45%', end: 'bottom 45%',
+      onToggle: function(self){ if (self.isActive) setActive(id); }
+    });
+  });
+
+  // anchor links → scroll (works with the smooth-scroll proxy)
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click', function(e){
+      const el = document.querySelector(a.getAttribute('href'));
+      if (!el) return;
+      e.preventDefault();
+      const y = el.getBoundingClientRect().top + (useSmooth ? current : window.scrollY) - 1;
+      if (useSmooth){ window.scrollTo({ top: y }); }
+      else { window.scrollTo({ top: y, behavior: prefersReduced ? 'auto' : 'smooth' }); }
+    });
+  });
+
+  /* ----------------------------------------------------------
+     8. SCROLL REVEALS
+     ---------------------------------------------------------- */
+  function buildReveals(){
+    if (prefersReduced){
+      gsap.set('[data-reveal]', { opacity: 1 });
+      return;
+    }
+    // generic fade/slide reveals — exclude hero (handled by intro timeline)
+    document.querySelectorAll('[data-reveal]').forEach(function(el){
+      if (el.closest('#hero')) return;
+      gsap.fromTo(el,
+        { opacity: 0, y: 36 },
+        {
+          opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 88%', once: true }
+        });
+    });
+    // word-split headings
+    document.querySelectorAll('[data-split]').forEach(function(el){
+      const words = el.querySelectorAll('.word-inner');
+      gsap.set(words, { yPercent: 115 });
+      ScrollTrigger.create({
+        trigger: el, start: 'top 85%', once: true,
+        onEnter: function(){
+          gsap.to(words, { yPercent: 0, duration: 0.9, ease: 'power4.out', stagger: 0.035 });
+        }
+      });
+    });
+  }
+
+  /* ----------------------------------------------------------
+     9. ANIMATED COUNTERS
+     ---------------------------------------------------------- */
+  document.querySelectorAll('[data-count]').forEach(function(el){
+    const end = parseInt(el.dataset.count, 10);
+    if (prefersReduced){ el.textContent = end; return; }
+    const obj = { v: 0 };
+    ScrollTrigger.create({
+      trigger: el, start: 'top 85%', once: true,
+      onEnter: function(){
+        gsap.to(obj, {
+          v: end, duration: 1.8, ease: 'power2.out',
+          snap: { v: 1 },
+          onUpdate: function(){ el.textContent = Math.round(obj.v); }
+        });
+      }
+    });
+  });
+
+  /* ----------------------------------------------------------
+     10. CONTACT FORM (no backend)
+     ---------------------------------------------------------- */
+  const form = document.getElementById('contactForm');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const ok = ['cf-name','cf-email','cf-msg'].every(function(id){
+      const f = document.getElementById(id);
+      const valid = f.value.trim() !== '' && f.checkValidity();
+      f.style.borderColor = valid ? '' : '#ff5566';
+      return valid;
+    });
+    if (!ok) return;
+    const success = document.getElementById('formSuccess');
+    success.style.display = 'block';
+    gsap.from(success, { opacity: 0, y: 10, duration: 0.6, ease: 'power3.out' });
+    form.querySelectorAll('input, textarea, button').forEach(function(f){ f.disabled = true; });
+  });
+
+  /* ----------------------------------------------------------
+     11. PRELOADER + HERO ENTRY SEQUENCE
+     ---------------------------------------------------------- */
+  const pre    = document.getElementById('preloader');
+  const preBar = pre.querySelector('.preloader-bar span');
+  const prePct = pre.querySelector('.preloader-pct');
+
+  function heroIntro(){
+    if (prefersReduced){
+      gsap.set('#nav', { y: 0 });
+      gsap.set('#hero [data-reveal]', { opacity: 1 });
+      gsap.set(heroChars, { yPercent: 0 });
+      buildReveals();
+      ScrollTrigger.refresh();
+      return;
+    }
+    gsap.set(heroChars, { yPercent: 110 });
+    const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+    tl.to('#nav', { y: 0, duration: 0.9, ease: 'power3.out' })
+      .to(heroChars, { yPercent: 0, duration: 1.1, stagger: 0.022 }, '-=0.55')
+      .fromTo('.hero-eyebrow', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8 }, '-=0.8')
+      .fromTo('.hero-sub',     { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.9 }, '-=0.7')
+      .fromTo('.hero-cta-row', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.9 }, '-=0.7')
+      .fromTo('.hero-status',  { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.8 }, '-=0.6')
+      .fromTo('.hero-scroll',  { opacity: 0 },        { opacity: 1, duration: 0.8 }, '-=0.5')
+      .add(function(){ buildReveals(); ScrollTrigger.refresh(); }, '-=0.4');
+  }
+
+  function runPreloader(){
+    if (prefersReduced){
+      pre.style.display = 'none';
+      heroIntro();
+      return;
+    }
+    const prog = { v: 0 };
+    const tl = gsap.timeline();
+    tl.to('.preloader-logo', { opacity: 1, duration: 0.4, ease: 'power2.out' })
+      .to('.boot-line', { opacity: 1, duration: 0.15, stagger: 0.18, ease: 'none' }, '-=0.1')
+      .to(prog, {
+        v: 100, duration: 1.0, ease: 'power2.inOut',
+        onUpdate: function(){
+          preBar.style.transform = 'scaleX(' + (prog.v / 100) + ')';
+          prePct.textContent = String(Math.round(prog.v)).padStart(2, '0');
+        }
+      }, '-=0.15')
+      .to(pre, {
+        yPercent: -100, duration: 0.85, ease: 'power4.inOut',
+        onComplete: function(){ pre.style.display = 'none'; }
+      }, '+=0.1')
+      .add(heroIntro, '-=0.45');
+  }
+
+  // Start when everything is loaded (fonts/libs), with a safety timeout
+  if (document.readyState === 'complete'){ runPreloader(); }
+  else {
+    let started = false;
+    const start = function(){ if (!started){ started = true; runPreloader(); } };
+    window.addEventListener('load', start);
+    setTimeout(start, 2500); // never trap the user behind the preloader
+  }
+
+})();
+</script>
+
+<!--
+  ============================================================
+  IMPLEMENTATION NOTES
+  ============================================================
+  v2 — harti.at rebrand: custom hex-circuit SVG logo (drawn-in on the
+  preloader via pathLength/dashoffset, reused via <symbol>/<use> in nav,
+  footer and favicon), JetBrains Mono technical layer, boot-sequence
+  preloader, film grain + scanline overlay, HUD corner brackets on cards,
+  giant outlined section indices, status readout in the hero, keyword
+  marquee strip, wireframe icosahedron added to the WebGL scene, glitch
+  hover on the logo. Content personalized for Michael Hartmann.
+
+  Implemented animations:
+   1. Hero entry sequence    — preloader → nav drop-in → per-character title
+                               reveal → staggered eyebrow/sub/CTA fade-ups
+   2. Three.js hero BG       — 2200-particle additive field (cyan→indigo),
+                               lerped mouse parallax, fades out on scroll,
+                               resize-safe, reduced count on mobile
+   3. Smooth scroll          — custom lerp (0.085) on fixed wrapper with
+                               GSAP scrollerProxy; native scroll on touch
+                               and when prefers-reduced-motion is set
+   4. Text reveals           — manual word/char splitting (no paid SplitText),
+                               masked yPercent rise with stagger on scroll
+   5. Section transitions    — GSAP ScrollTrigger fade/slide per element
+   6. Magnetic cursor        — dot + lagging ring, grows on [data-hover],
+                               disabled on touch / coarse pointers
+   7. Magnetic buttons       — CTA buttons follow cursor, elastic release
+   8. Nav                    — fixed, blurred, sliding active indicator
+                               driven by ScrollTrigger section spy
+   9. Card 3D tilt           — perspective rotation via GSAP, preserve-3d
+                               with translateZ depth layers inside cards
+  10. Counters               — GSAP snap-tweened numbers, fire once on scroll
+  11. Footer wave            — two layered SVG waves, opposing CSS drift
+  12. Preloader              — 1.5–1.9s bar + percentage, power4 slide-out,
+                               load-event gated with 2.5s safety timeout
+
+  Known limitations:
+   - Smooth scroll uses transform-based scrolling; native anchors/find-in-page
+     jump instantly (handled for in-page nav links).
+   - Work grid uses CSS-generated gradient visuals as placeholders — swap
+     .work-visual backgrounds for real <img> assets in production.
+   - Form has no backend; submit shows a success state only.
+   - Three.js r128 pinned for CDN stability; migrate to ES-module builds
+     (importmap) when upgrading.
+
+  Suggested next improvements:
+   - Replace placeholder visuals with real case-study imagery + lazy loading.
+   - Add a mobile nav drawer (links are hidden < 768px by design here).
+   - Page transition layer (barba.js style) if the site grows multi-page.
+   - Shader-based particle motion (curl noise) for richer hero movement.
+   - Lenis as a battle-tested smooth-scroll replacement if edge cases appear.
+  ============================================================
+-->
+</body>
+</html>

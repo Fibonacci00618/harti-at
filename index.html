@@ -23,6 +23,7 @@
   --accent:    #00ffcc;
   --accent-2:  #6366f1;
   --accent-glow: rgba(0,255,204,0.35);
+  --err:       #ff5a6a;
   --font-display: 'Space Grotesk', sans-serif;
   --font-body:    'Inter', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
@@ -645,6 +646,143 @@ body.reduced .marquee-track{ animation:none; }
   .marquee-track, .hero-status span::before, #preloader .logo-mark{ animation:none; }
   #preloader .logo-mark{ stroke-dashoffset:0; }
 }
+
+/* ============================================================
+   17. INTERACTIVE LAYER — v3 (cmdk · aurora · HUD · progress)
+   ============================================================ */
+/* scroll progress hairline */
+.scroll-progress{
+  position:fixed; top:0; left:0; right:0; height:2px; z-index:901;
+  background:rgba(255,255,255,0.05); pointer-events:none;
+}
+.scroll-progress span{
+  display:block; height:100%; width:100%;
+  transform:scaleX(0); transform-origin:left center;
+  background:linear-gradient(90deg,var(--accent-2),var(--accent));
+  box-shadow:0 0 12px var(--accent-glow);
+}
+
+/* hero aurora — breathing gradient behind the title */
+.hero-inner{ position:relative; z-index:1; }
+.hero-aurora{
+  position:absolute; inset:-15% -10% -25% -10%; z-index:0;
+  pointer-events:none; overflow:hidden; opacity:0.55;
+}
+.hero-aurora::before,.hero-aurora::after{
+  content:""; position:absolute; border-radius:50%;
+  filter:blur(70px); mix-blend-mode:screen;
+}
+.hero-aurora::before{
+  width:46vw; height:46vw; left:-6vw; top:-4vw;
+  background:radial-gradient(circle at 50% 50%, rgba(0,255,204,0.30), transparent 65%);
+  animation:auroraA 19s var(--ease-out) infinite alternate;
+}
+.hero-aurora::after{
+  width:50vw; height:50vw; right:-10vw; top:6vw;
+  background:radial-gradient(circle at 50% 50%, rgba(99,102,241,0.28), transparent 65%);
+  animation:auroraB 24s var(--ease-out) infinite alternate;
+}
+@keyframes auroraA{ from{ transform:translate3d(0,0,0) scale(1); } to{ transform:translate3d(6vw,4vh,0) scale(1.18); } }
+@keyframes auroraB{ from{ transform:translate3d(0,0,0) scale(1.05); } to{ transform:translate3d(-7vw,-3vh,0) scale(0.9); } }
+
+/* nav right group + command trigger */
+.nav-right{ display:flex; align-items:center; gap:clamp(10px,2vw,22px); }
+.cmd-trigger{
+  display:inline-flex; align-items:center; gap:9px;
+  padding:7px 12px; border:1px solid var(--line); border-radius:7px;
+  background:rgba(255,255,255,0.02);
+  font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.14em;
+  color:var(--muted); cursor:pointer; white-space:nowrap;
+  transition:border-color .3s ease, color .3s ease, box-shadow .3s ease;
+}
+.cmd-trigger:hover{ border-color:rgba(0,255,204,0.45); color:var(--text); box-shadow:0 0 22px rgba(0,255,204,0.08); }
+.cmd-trigger .dotk{ width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent-glow); flex:none; }
+
+/* command palette */
+.cmdk{ position:fixed; inset:0; z-index:980; display:flex; align-items:flex-start; justify-content:center; }
+.cmdk[hidden]{ display:none; }
+.cmdk-backdrop{ position:absolute; inset:0; background:rgba(4,4,8,0.6);
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+.cmdk-panel{
+  position:relative; margin-top:12vh; width:min(620px,92vw);
+  background:rgba(14,14,20,0.94); border:1px solid rgba(0,255,204,0.18);
+  border-radius:14px; overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,0.55), inset 0 0 40px rgba(0,255,204,0.03);
+  animation:cmdkIn .28s var(--ease-out);
+}
+@keyframes cmdkIn{ from{ opacity:0; transform:translateY(-10px) scale(0.98); } to{ opacity:1; transform:none; } }
+.cmdk-head{ display:flex; align-items:center; gap:12px; padding:18px 18px 14px; border-bottom:1px solid var(--line); }
+.cmdk-prompt{ font-family:var(--font-mono); color:var(--accent); font-size:1rem; }
+#cmdkInput{ flex:1; background:transparent; border:none; outline:none;
+  font-family:var(--font-mono); font-size:1rem; letter-spacing:0.02em; color:var(--text); }
+#cmdkInput::placeholder{ color:var(--muted); }
+.cmdk-esc{ font-family:var(--font-mono); font-size:0.6rem; padding:3px 7px;
+  border:1px solid var(--line); border-radius:5px; color:var(--muted); }
+.cmdk-list{ list-style:none; max-height:46vh; overflow:auto; padding:8px; }
+.cmdk-item{ display:flex; align-items:center; gap:14px; padding:11px 14px;
+  border-radius:9px; cursor:pointer; color:var(--muted); }
+.cmdk-item .ci-ico{ width:30px; height:30px; display:grid; place-items:center;
+  border:1px solid var(--line); border-radius:7px; color:var(--accent); flex:none;
+  font-family:var(--font-mono); font-size:0.72rem; }
+.cmdk-item .ci-label{ color:var(--text); font-size:0.92rem; }
+.cmdk-item .ci-hint{ margin-left:auto; font-family:var(--font-mono); font-size:0.64rem;
+  letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; }
+.cmdk-item[aria-selected="true"]{ background:rgba(0,255,204,0.08); color:var(--text);
+  box-shadow:inset 0 0 0 1px rgba(0,255,204,0.25); }
+.cmdk-empty{ padding:26px 16px; text-align:center; color:var(--muted);
+  font-family:var(--font-mono); font-size:0.8rem; }
+.cmdk-foot{ display:flex; align-items:center; gap:18px; padding:11px 16px;
+  border-top:1px solid var(--line); font-family:var(--font-mono);
+  font-size:0.62rem; letter-spacing:0.1em; color:var(--muted); }
+.cmdk-foot kbd{ display:inline-block; padding:1px 5px; border:1px solid var(--line);
+  border-radius:4px; margin-right:3px; }
+.cmdk-foot .cmdk-brand{ margin-left:auto; color:var(--accent); opacity:0.7; }
+body.cmdk-open.cursor-active{ cursor:auto; }
+body.cmdk-open .cursor-dot, body.cmdk-open .cursor-ring{ display:none; }
+
+/* fx overlay toggle + overdrive veil */
+.fx-overlay.off{ display:none; }
+.overdrive-veil{ position:fixed; inset:0; z-index:949; pointer-events:none; opacity:0;
+  transition:opacity .35s ease;
+  background:radial-gradient(125% 125% at 50% 50%, transparent 52%, rgba(0,255,204,0.12) 100%); }
+body.overdrive .overdrive-veil{ opacity:1; }
+
+/* work item HUD reticle + scanline */
+.work-item::before,.work-item::after{
+  content:""; position:absolute; width:16px; height:16px; z-index:2;
+  pointer-events:none; opacity:0;
+  transition:opacity .4s ease, width .4s var(--ease-out), height .4s var(--ease-out);
+}
+.work-item::before{ top:12px; left:12px; border-top:1px solid var(--accent); border-left:1px solid var(--accent); }
+.work-item::after{ bottom:12px; right:12px; border-bottom:1px solid var(--accent); border-right:1px solid var(--accent); }
+.work-item:hover::before,.work-item:hover::after,
+.work-item:focus-visible::before,.work-item:focus-visible::after{ opacity:0.9; width:26px; height:26px; }
+.work-item:focus-visible{ outline:none; box-shadow:0 0 0 1px rgba(0,255,204,0.5), 0 0 30px rgba(0,255,204,0.12); }
+.work-visual::before{
+  content:""; position:absolute; left:0; right:0; top:0; height:2px; z-index:1;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent); opacity:0;
+}
+.work-item:hover .work-visual::before{ animation:workScan 1.7s linear infinite; }
+@keyframes workScan{ 0%{ opacity:0; top:0; } 12%{ opacity:0.7; } 88%{ opacity:0.7; } 100%{ opacity:0; top:100%; } }
+
+/* contact form inline validation */
+.form-error{ display:none; margin-top:8px; font-family:var(--font-mono);
+  font-size:0.66rem; letter-spacing:0.06em; color:var(--err); }
+.form-field.invalid input, .form-field.invalid textarea{ border-color:var(--err); }
+.form-field.invalid .form-error{ display:block; }
+.form-field.valid input, .form-field.valid textarea{ border-color:rgba(0,255,204,0.45); }
+
+/* reduced-motion fallbacks for the v3 layer */
+body.reduced .hero-aurora::before, body.reduced .hero-aurora::after,
+body.reduced .cmdk-panel,
+body.reduced .work-item:hover .work-visual::before{ animation:none; }
+body.reduced .overdrive-veil{ transition:none; }
+@media (prefers-reduced-motion:reduce){
+  .hero-aurora::before,.hero-aurora::after,
+  .cmdk-panel,
+  .work-item:hover .work-visual::before{ animation:none; }
+  .overdrive-veil{ transition:none; }
+}
 </style>
 </head>
 <body>
@@ -665,6 +803,8 @@ body.reduced .marquee-track{ animation:none; }
   </defs>
 </svg>
 <div class="fx-overlay" aria-hidden="true"></div>
+<div class="overdrive-veil" aria-hidden="true"></div>
+<div class="scroll-progress" aria-hidden="true"><span></span></div>
 
 <!-- ===================== PRELOADER ===================== -->
 <div id="preloader" aria-hidden="true">
@@ -689,14 +829,20 @@ body.reduced .marquee-track{ animation:none; }
 <!-- ===================== NAVIGATION ===================== -->
 <nav id="nav">
   <a href="#hero" class="nav-logo" data-hover><svg class="logo-mark" viewBox="0 0 48 48"><use href="#logo-h"/></svg><span class="logo-word">harti<em>.at</em></span></a>
-  <ul class="nav-links">
-    <li><a href="#hero" class="active" data-hover>Home</a></li>
-    <li><a href="#about" data-hover>About</a></li>
-    <li><a href="#services" data-hover>Services</a></li>
-    <li><a href="#work" data-hover>Work</a></li>
-    <li><a href="#contact" data-hover>Contact</a></li>
-    <li class="nav-indicator" aria-hidden="true"></li>
-  </ul>
+  <div class="nav-right">
+    <ul class="nav-links">
+      <li><a href="#hero" class="active" data-hover>Home</a></li>
+      <li><a href="#about" data-hover>About</a></li>
+      <li><a href="#services" data-hover>Services</a></li>
+      <li><a href="#work" data-hover>Work</a></li>
+      <li><a href="#contact" data-hover>Contact</a></li>
+      <li class="nav-indicator" aria-hidden="true"></li>
+    </ul>
+    <button type="button" id="cmdTrigger" class="cmd-trigger" data-hover
+            aria-haspopup="dialog" aria-controls="cmdk" aria-label="Open command menu">
+      <span class="dotk" aria-hidden="true"></span><kbd id="cmdTriggerKey">⌘K</kbd>
+    </button>
+  </div>
 </nav>
 
 <!-- ===================== THREE.JS BACKGROUND ===================== -->
@@ -708,6 +854,7 @@ body.reduced .marquee-track{ animation:none; }
 
   <!-- ===================== HERO ===================== -->
   <header class="" id="hero">
+    <div class="hero-aurora" aria-hidden="true"></div>
     <div class="hero-inner">
       <div class="eyebrow hero-eyebrow" data-reveal>Michael Hartmann — IT System Engineer</div>
       <h1 class="hero-title" id="heroTitle">
@@ -726,9 +873,9 @@ body.reduced .marquee-track{ animation:none; }
       </div>
       <div class="hero-status" data-reveal>
         <span>SYS://ONLINE</span>
+        <span id="hudClock">--:--:--</span>
         <span>47.16°N · 9.80°E</span>
-        <span>UPTIME 99.98%</span>
-        <span>V3.0.1</span>
+        <span id="hudUptime">UPTIME 00:00:00</span>
       </div>
     </div>
     <div class="hero-scroll" data-reveal>Scroll</div>
@@ -946,6 +1093,26 @@ body.reduced .marquee-track{ animation:none; }
 </div><!-- /#smooth-content -->
 </div><!-- /#smooth-wrapper -->
 
+<!-- ===================== COMMAND PALETTE ===================== -->
+<div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-label="Command palette" hidden>
+  <div class="cmdk-backdrop" data-cmdk-close></div>
+  <div class="cmdk-panel">
+    <div class="cmdk-head">
+      <span class="cmdk-prompt" aria-hidden="true">&gt;</span>
+      <input id="cmdkInput" type="text" autocomplete="off" spellcheck="false"
+             role="combobox" aria-expanded="true" aria-controls="cmdkList" aria-autocomplete="list"
+             placeholder="Jump to a section, copy email, engage overdrive…" aria-label="Command input">
+      <kbd class="cmdk-esc">ESC</kbd>
+    </div>
+    <ul class="cmdk-list" id="cmdkList" role="listbox" aria-label="Commands"></ul>
+    <div class="cmdk-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> select</span>
+      <span class="cmdk-brand">harti.at // console</span>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== LIBRARIES ===================== -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1028,6 +1195,7 @@ body.reduced .marquee-track{ animation:none; }
   let renderer, scene, camera, points, wire;
   let mouseX = 0, mouseY = 0, camX = 0, camY = 0;
   let webglOK = true;
+  let wireBaseX = 0, wireBaseY = 0, overdriveUntil = 0;
 
   try {
     renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: false, powerPreference: 'high-performance' });
@@ -1076,6 +1244,7 @@ body.reduced .marquee-track{ animation:none; }
       new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true, transparent: true, opacity: 0.09 })
     );
     wire.position.set(window.innerWidth < 768 ? 0 : 2.7, 0.2, 1.4);
+    wireBaseX = wire.position.x; wireBaseY = wire.position.y;
     scene.add(wire);
 
     window.addEventListener('mousemove', function(e){
@@ -1097,11 +1266,15 @@ body.reduced .marquee-track{ animation:none; }
   function renderWebGL(t){
     if (!webglOK) return;
     if (!prefersReduced){
-      points.rotation.y = t * 0.00004;
+      const boost = t < overdriveUntil ? 7 : 1;   // overdrive / konami multiplier
+      points.rotation.y = t * 0.00004 * boost;
       points.rotation.x = Math.sin(t * 0.00002) * 0.08;
       if (wire){
-        wire.rotation.y = t * 0.00012;
-        wire.rotation.x = t * 0.00007;
+        wire.rotation.y = t * 0.00012 * boost;
+        wire.rotation.x = t * 0.00007 * boost;
+        // icosahedron drifts toward the cursor — feels reactive
+        wire.position.x += (wireBaseX + mouseX * 0.9 - wire.position.x) * 0.05;
+        wire.position.y += (wireBaseY - mouseY * 0.6 - wire.position.y) * 0.05;
       }
       camX += (mouseX * 0.7 - camX) * 0.04;   // mouse parallax (lerped)
       camY += (-mouseY * 0.45 - camY) * 0.04;
@@ -1110,6 +1283,24 @@ body.reduced .marquee-track{ animation:none; }
       camera.lookAt(0, 0, 0);
     }
     renderer.render(scene, camera);
+  }
+
+  // a click anywhere sends a soft pulse through the centerpiece
+  function webglPulse(){
+    if (!webglOK || prefersReduced || !wire) return;
+    gsap.fromTo(wire.scale, { x:1, y:1, z:1 },
+      { x:1.14, y:1.14, z:1.14, duration:0.28, ease:'power2.out', yoyo:true, repeat:1, overwrite:true });
+    gsap.fromTo(wire.material, { opacity:0.09 },
+      { opacity:0.26, duration:0.28, ease:'power2.out', yoyo:true, repeat:1, overwrite:true });
+  }
+  // overdrive — brief accent surge (command palette + konami code)
+  let overdriveTimer = null;
+  function igniteOverdrive(ms){
+    overdriveUntil = performance.now() + ms;
+    document.body.classList.add('overdrive');
+    webglPulse();
+    clearTimeout(overdriveTimer);
+    overdriveTimer = setTimeout(function(){ document.body.classList.remove('overdrive'); }, ms);
   }
 
   // Fade particles out once the hero leaves the viewport
@@ -1158,6 +1349,7 @@ body.reduced .marquee-track{ animation:none; }
   // Custom cursor state
   const dot  = document.querySelector('.cursor-dot');
   const ring = document.querySelector('.cursor-ring');
+  const progressBar = document.querySelector('.scroll-progress span');
   let cx = innerWidth / 2, cy = innerHeight / 2;   // mouse
   let rx = cx, ry = cy;                            // lagging ring
 
@@ -1185,6 +1377,12 @@ body.reduced .marquee-track{ animation:none; }
       ry += (cy - ry) * 0.16;
       ring.style.left = rx + 'px';
       ring.style.top  = ry + 'px';
+    }
+    // scroll progress hairline
+    if (progressBar){
+      const sc  = useSmooth ? current : window.scrollY;
+      const max = Math.max(1, (document.body.scrollHeight || document.documentElement.scrollHeight) - window.innerHeight);
+      progressBar.style.transform = 'scaleX(' + Math.min(1, sc / max).toFixed(4) + ')';
     }
     renderWebGL(t);
     requestAnimationFrame(raf);
@@ -1258,15 +1456,19 @@ body.reduced .marquee-track{ animation:none; }
     });
   });
 
-  // anchor links → scroll (works with the smooth-scroll proxy)
+  // shared scroll helper (used by anchor links + command palette)
+  function scrollToEl(el){
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + (useSmooth ? current : window.scrollY) - 1;
+    if (useSmooth){ window.scrollTo({ top: y }); }
+    else { window.scrollTo({ top: y, behavior: prefersReduced ? 'auto' : 'smooth' }); }
+  }
   document.querySelectorAll('a[href^="#"]').forEach(function(a){
     a.addEventListener('click', function(e){
       const el = document.querySelector(a.getAttribute('href'));
       if (!el) return;
       e.preventDefault();
-      const y = el.getBoundingClientRect().top + (useSmooth ? current : window.scrollY) - 1;
-      if (useSmooth){ window.scrollTo({ top: y }); }
-      else { window.scrollTo({ top: y, behavior: prefersReduced ? 'auto' : 'smooth' }); }
+      scrollToEl(el);
     });
   });
 
@@ -1321,23 +1523,262 @@ body.reduced .marquee-track{ animation:none; }
   });
 
   /* ----------------------------------------------------------
-     10. CONTACT FORM (no backend)
+     10. CONTACT FORM — live inline validation (no backend)
      ---------------------------------------------------------- */
   const form = document.getElementById('contactForm');
+  const fields = [
+    { el: document.getElementById('cf-name'),  msg: 'Please enter your name.' },
+    { el: document.getElementById('cf-email'), msg: 'Enter a valid email address.' },
+    { el: document.getElementById('cf-msg'),   msg: 'Tell me a little about it.' }
+  ];
+
+  function validateField(f){
+    const wrap = f.el.closest('.form-field');
+    const ok   = f.el.value.trim() !== '' && f.el.checkValidity();
+    wrap.classList.toggle('invalid', !ok);
+    wrap.classList.toggle('valid', ok);
+    f.el.setAttribute('aria-invalid', ok ? 'false' : 'true');
+    return ok;
+  }
+
+  fields.forEach(function(f){
+    if (!f.el) return;
+    const wrap = f.el.closest('.form-field');
+    const err  = document.createElement('p');
+    err.className = 'form-error';
+    err.id = f.el.id + '-err';
+    err.textContent = f.msg;
+    err.setAttribute('role', 'alert');
+    wrap.appendChild(err);
+    f.el.setAttribute('aria-describedby', err.id);
+    f.el.addEventListener('blur', function(){ validateField(f); });
+    f.el.addEventListener('input', function(){
+      if (wrap.classList.contains('invalid')) validateField(f);
+    });
+  });
+
   form.addEventListener('submit', function(e){
     e.preventDefault();
-    const ok = ['cf-name','cf-email','cf-msg'].every(function(id){
-      const f = document.getElementById(id);
-      const valid = f.value.trim() !== '' && f.checkValidity();
-      f.style.borderColor = valid ? '' : '#ff5566';
-      return valid;
+    let allOK = true, firstBad = null;
+    fields.forEach(function(f){
+      const ok = validateField(f);
+      if (!ok){ allOK = false; if (!firstBad) firstBad = f.el; }
     });
-    if (!ok) return;
+    if (!allOK){ if (firstBad) firstBad.focus(); return; }
+
+    const btn     = form.querySelector('button[type="submit"]');
     const success = document.getElementById('formSuccess');
-    success.style.display = 'block';
-    gsap.from(success, { opacity: 0, y: 10, duration: 0.6, ease: 'power3.out' });
-    form.querySelectorAll('input, textarea, button').forEach(function(f){ f.disabled = true; });
+    if (btn) btn.textContent = 'Transmitting…';
+    setTimeout(function(){
+      success.style.display = 'block';
+      if (!prefersReduced) gsap.from(success, { opacity: 0, y: 10, duration: 0.6, ease: 'power3.out' });
+      form.querySelectorAll('input, textarea, button').forEach(function(el){ el.disabled = true; });
+      if (btn) btn.textContent = 'Message sent';
+    }, prefersReduced ? 0 : 650);
   });
+
+  /* ----------------------------------------------------------
+     12. LIVE HUD — local time (Europe/Vienna) + session uptime
+     ---------------------------------------------------------- */
+  (function initHUD(){
+    const clockEl  = document.getElementById('hudClock');
+    const uptimeEl = document.getElementById('hudUptime');
+    if (!clockEl && !uptimeEl) return;
+    const t0  = Date.now();
+    const pad = function(n){ return String(n).padStart(2, '0'); };
+    function tick(){
+      const now = new Date();
+      if (clockEl){
+        try {
+          const time = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit',
+            second: '2-digit', hour12: false
+          }).format(now);
+          const tzPart = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Vienna', timeZoneName: 'short'
+          }).formatToParts(now).find(function(p){ return p.type === 'timeZoneName'; });
+          clockEl.textContent = time + (tzPart ? ' ' + tzPart.value : '');
+        } catch (e){
+          clockEl.textContent = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+        }
+      }
+      if (uptimeEl){
+        const s = Math.floor((Date.now() - t0) / 1000);
+        uptimeEl.textContent = 'UPTIME ' + pad((s / 3600) | 0) + ':' + pad(((s / 60) % 60) | 0) + ':' + pad(s % 60);
+      }
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+
+  /* ----------------------------------------------------------
+     13. TEXT SCRAMBLE / DECODE — section eyebrows
+     ---------------------------------------------------------- */
+  const SCRAMBLE_CHARS = '!<>-_\\/[]{}=+*^?#01ABCDEF';
+  function scrambleEl(el, dur){
+    if (!el || prefersReduced) return;
+    const finalText = el.dataset.text || el.textContent;
+    el.dataset.text = finalText;
+    const len = finalText.length;
+    const D = dur || 700;
+    const start = performance.now();
+    function frame(now){
+      const p = Math.min(1, (now - start) / D);
+      const revealed = p * len;
+      let out = '';
+      for (let i = 0; i < len; i++){
+        const c = finalText[i];
+        if (c === ' ' || c === '·'){ out += c; }
+        else if (i < revealed){ out += c; }
+        else { out += SCRAMBLE_CHARS[(Math.random() * SCRAMBLE_CHARS.length) | 0]; }
+      }
+      el.textContent = out;
+      if (p < 1) requestAnimationFrame(frame);
+      else el.textContent = finalText;
+    }
+    requestAnimationFrame(frame);
+  }
+  if (!prefersReduced){
+    document.querySelectorAll('.section .eyebrow').forEach(function(el){
+      el.dataset.text = el.textContent;
+      ScrollTrigger.create({
+        trigger: el, start: 'top 90%', once: true,
+        onEnter: function(){ scrambleEl(el, 650); }
+      });
+    });
+  }
+
+  /* ----------------------------------------------------------
+     14. WORLD REACTS — click pulse + konami overdrive
+     ---------------------------------------------------------- */
+  if (isFinePointer && !prefersReduced){
+    window.addEventListener('pointerdown', function(e){
+      if (document.body.classList.contains('cmdk-open')) return;
+      if (e.target.closest('input, textarea, button, a')) return;
+      webglPulse();
+    }, { passive: true });
+  }
+  (function konami(){
+    const SEQ = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+    let idx = 0;
+    window.addEventListener('keydown', function(e){
+      const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      if (k === SEQ[idx]){ idx++; if (idx === SEQ.length){ idx = 0; igniteOverdrive(3200); } }
+      else { idx = (k === SEQ[0]) ? 1 : 0; }
+    });
+  })();
+
+  /* ----------------------------------------------------------
+     15. COMMAND PALETTE (⌘K / Ctrl+K) — also the mobile nav
+     ---------------------------------------------------------- */
+  (function initCmdk(){
+    const root    = document.getElementById('cmdk');
+    const input   = document.getElementById('cmdkInput');
+    const list    = document.getElementById('cmdkList');
+    const trigger = document.getElementById('cmdTrigger');
+    if (!root || !input || !list) return;
+
+    const isMac = /mac|iphone|ipad|ipod/i.test(navigator.platform || navigator.userAgent || '');
+    const keyEl = document.getElementById('cmdTriggerKey');
+    if (keyEl){ keyEl.textContent = isMac ? '⌘K' : 'Ctrl K'; keyEl.dataset.base = keyEl.textContent; }
+
+    function go(hash){ closePanel(); const el = document.querySelector(hash); requestAnimationFrame(function(){ scrollToEl(el); }); }
+    function flash(txt){ if (!keyEl) return; keyEl.textContent = txt; setTimeout(function(){ keyEl.textContent = keyEl.dataset.base; }, 1100); }
+    function copyEmail(){
+      const mail = 'hello@harti.at';
+      const done = function(){ flash('COPIED'); };
+      if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(mail).then(done).catch(done); }
+      else { done(); }
+      closePanel();
+    }
+
+    const commands = [
+      { ico:'⌂', label:'Go to Home',            hint:'Section',   kw:'hero top',              run:function(){ go('#hero'); } },
+      { ico:'01',     label:'About',                 hint:'Section',   kw:'profile michael',       run:function(){ go('#about'); } },
+      { ico:'02',     label:'Services',              hint:'Section',   kw:'focus areas domains',   run:function(){ go('#services'); } },
+      { ico:'03',     label:'Work',                  hint:'Section',   kw:'projects lab',          run:function(){ go('#work'); } },
+      { ico:'04',     label:'Contact',               hint:'Section',   kw:'email message hire',    run:function(){ go('#contact'); } },
+      { ico:'@',      label:'Copy email address',    hint:'Clipboard', kw:'mail hello',            run:copyEmail },
+      { ico:'✉', label:'Send an email',         hint:'Mailto',    kw:'contact write',         run:function(){ closePanel(); window.location.href = 'mailto:hello@harti.at'; } },
+      { ico:'↗', label:'Source on GitHub',      hint:'External',  kw:'code repository',       run:function(){ closePanel(); window.open('https://github.com/Fibonacci00618', '_blank', 'noopener'); } },
+      { ico:'▦', label:'Toggle grain & scanlines', hint:'FX',     kw:'effects overlay noise', run:function(){ document.querySelector('.fx-overlay').classList.toggle('off'); } },
+      { ico:'⚡', label:'Engage overdrive',      hint:'Boost',     kw:'particles secret boost',run:function(){ closePanel(); igniteOverdrive(3200); } }
+    ];
+
+    let filtered = commands.slice();
+    let active   = 0;
+    let lastFocused = null;
+
+    function fuzzy(q, hay){ let i = 0; for (let j = 0; j < hay.length && i < q.length; j++){ if (hay[j] === q[i]) i++; } return i === q.length; }
+    function filter(q){
+      q = q.trim().toLowerCase();
+      filtered = !q ? commands.slice() : commands.filter(function(c){
+        return fuzzy(q, (c.label + ' ' + (c.kw || '') + ' ' + c.hint).toLowerCase());
+      });
+      active = 0; render();
+    }
+    function render(){
+      list.innerHTML = '';
+      if (!filtered.length){
+        const li = document.createElement('li'); li.className = 'cmdk-empty';
+        li.textContent = 'No matching command'; list.appendChild(li); return;
+      }
+      filtered.forEach(function(c, i){
+        const li = document.createElement('li');
+        li.className = 'cmdk-item'; li.setAttribute('role', 'option');
+        li.setAttribute('aria-selected', i === active ? 'true' : 'false');
+        li.innerHTML = '<span class="ci-ico"></span><span class="ci-label"></span><span class="ci-hint"></span>';
+        li.querySelector('.ci-ico').textContent   = c.ico;
+        li.querySelector('.ci-label').textContent = c.label;
+        li.querySelector('.ci-hint').textContent  = c.hint;
+        li.addEventListener('mouseenter', function(){ active = i; sync(); });
+        li.addEventListener('click', function(){ c.run(); });
+        list.appendChild(li);
+      });
+    }
+    function sync(){
+      Array.from(list.children).forEach(function(li, i){
+        if (li.classList.contains('cmdk-empty')) return;
+        li.setAttribute('aria-selected', i === active ? 'true' : 'false');
+      });
+      const el = list.children[active];
+      if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+    }
+    function openPanel(){
+      if (!root.hasAttribute('hidden')) return;
+      lastFocused = document.activeElement;
+      root.removeAttribute('hidden');
+      document.body.classList.add('cmdk-open');
+      input.value = ''; filter('');
+      requestAnimationFrame(function(){ input.focus(); });
+    }
+    function closePanel(){
+      if (root.hasAttribute('hidden')) return;
+      root.setAttribute('hidden', '');
+      document.body.classList.remove('cmdk-open');
+      if (lastFocused && lastFocused.focus) lastFocused.focus();
+    }
+    function toggle(){ root.hasAttribute('hidden') ? openPanel() : closePanel(); }
+
+    input.addEventListener('input', function(){ filter(input.value); });
+    root.querySelector('.cmdk-backdrop').addEventListener('click', closePanel);
+    if (trigger) trigger.addEventListener('click', openPanel);
+    // keep the page behind the palette from scrolling
+    root.addEventListener('wheel', function(e){ if (!e.target.closest('.cmdk-list')) e.preventDefault(); }, { passive: false });
+    root.addEventListener('touchmove', function(e){ if (!e.target.closest('.cmdk-list')) e.preventDefault(); }, { passive: false });
+
+    window.addEventListener('keydown', function(e){
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){ e.preventDefault(); toggle(); return; }
+      if (root.hasAttribute('hidden')) return;
+      if (e.key === 'Escape'){ e.preventDefault(); closePanel(); }
+      else if (e.key === 'ArrowDown'){ e.preventDefault(); if (filtered.length){ active = (active + 1) % filtered.length; sync(); } }
+      else if (e.key === 'ArrowUp'){ e.preventDefault(); if (filtered.length){ active = (active - 1 + filtered.length) % filtered.length; sync(); } }
+      else if (e.key === 'Enter'){ e.preventDefault(); if (filtered[active]) filtered[active].run(); }
+      else if (e.key === 'Tab'){ e.preventDefault(); }   // focus trap
+    });
+
+    render();
+  })();
 
   /* ----------------------------------------------------------
      11. PRELOADER + HERO ENTRY SEQUENCE
@@ -1360,6 +1801,7 @@ body.reduced .marquee-track{ animation:none; }
     tl.to('#nav', { y: 0, duration: 0.9, ease: 'power3.out' })
       .to(heroChars, { yPercent: 0, duration: 1.1, stagger: 0.022 }, '-=0.55')
       .fromTo('.hero-eyebrow', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8 }, '-=0.8')
+      .add(function(){ scrambleEl(document.querySelector('.hero-eyebrow'), 820); }, '-=0.55')
       .fromTo('.hero-sub',     { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.9 }, '-=0.7')
       .fromTo('.hero-cta-row', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.9 }, '-=0.7')
       .fromTo('.hero-status',  { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.8 }, '-=0.6')
@@ -1414,6 +1856,14 @@ body.reduced .marquee-track{ animation:none; }
   giant outlined section indices, status readout in the hero, keyword
   marquee strip, wireframe icosahedron added to the WebGL scene, glitch
   hover on the logo. Content personalized for Michael Hartmann.
+
+  v3 — interactive layer: ⌘K/Ctrl+K command palette (fuzzy search, keyboard
+  driven, focus-trapped, doubles as the mobile nav), live HUD readout (local
+  Europe/Vienna time + ticking session uptime), text scramble/decode on the
+  eyebrows, cursor-reactive icosahedron + click pulse + konami "overdrive",
+  breathing hero aurora, scroll-progress hairline, HUD reticle + scanline on
+  work cards, and live inline form validation. Every effect ships with a
+  reduced-motion fallback and degrades gracefully without JS/WebGL.
 
   Implemented animations:
    1. Hero entry sequence    — preloader → nav drop-in → per-character title
